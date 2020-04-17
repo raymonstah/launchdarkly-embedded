@@ -26,7 +26,7 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "sdk-key",
-				Required:    true,
+				EnvVars: []string{"SDK_KEY"},
 				Destination: &sdkKey,
 			},
 			&cli.StringFlag{
@@ -123,19 +123,20 @@ func action(_ *cli.Context) error {
 }
 
 func benchmark(ldClient *ld.LDClient) {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(500 * time.Millisecond)
 	totalTime := time.Duration(0)
-	totalTicks := 1000
+	totalTicks := 500
 	for i := 0; i < totalTicks; i++ {
 		select {
 		case <-ticker.C:
 			start := time.Now()
-			str, err := ldClient.StringVariation("string-flag", ld.NewAnonymousUser("blah"), "")
+			_, err := ldClient.StringVariation("string-flag", ld.NewAnonymousUser("blah"), "")
 			if err != nil {
 				fmt.Println("unable to get string variation", err)
 			}
 			elapsed := time.Now().Sub(start)
-			fmt.Printf("evaluated variation as %q in %v\n", str, elapsed.String())
+			fmt.Println(elapsed.Microseconds())
+			//fmt.Printf("evaluated variation as %q in %v\n", str, elapsed.String())
 			totalTime += elapsed
 		}
 	}

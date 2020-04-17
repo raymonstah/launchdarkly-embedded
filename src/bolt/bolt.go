@@ -52,9 +52,9 @@ func (b boltFeatureStore) InitInternal(allData map[ld.VersionedDataKind]map[stri
 
 // GetInternal assumes that the inner bucket exists
 func (b boltFeatureStore) GetInternal(kind ld.VersionedDataKind, key string) (ld.VersionedData, error) {
-	defer func(t time.Time) {
-		fmt.Printf("took %v microseconds to get item %v\n", time.Now().Sub(t).Microseconds(), key)
-	}(time.Now())
+	//defer func(t time.Time) {
+	//	fmt.Printf("took %v microseconds to get item %v\n", time.Now().Sub(t).Microseconds(), key)
+	//}(time.Now())
 
 	var result ld.VersionedData
 	err := b.boltDB.View(func(tx *bolt.Tx) error {

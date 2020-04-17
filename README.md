@@ -37,25 +37,21 @@ config.UseLdd = true
 
 ## Benchmarking:
 (Read only)
-Let's evaluate the same flag 1000 times.
+Let's evaluate the same flag 500 times.
+![benchmark-image-here](docs/benchmark.png)
 
-* Using DynamoDB: 3.65 milliseconds
+* Using DynamoDB (us-west-2 / Oregon): 58 milliseconds
+* Using DynamoDB (local): 3.65 milliseconds
 * Using BoltDB: 35 microseconds
 * Using Redis (local): 1.7 milliseconds
 
-So.. roughly ~100x faster compared to DynamoDB
+So.. roughly ~1000x faster compared to DynamoDB
 
 ## Things left to do:
 * Write unit tests
 * Documentation
-
-TODO:
-* Test against "real" instance of Dynamo? (everything else was too difficult so spin up, which goes back to why people might want to use an embedded datastore in the first place)
 * Test against reads and writes of different flags
-* Make graphs (plot against each other?)
 * Record video
-* Test offline (relay mode) <-- show that this works via network disconnect
-* Show code?
 
 ##Summary
 * Speed! Reads are way faster than the traditional data stores.
