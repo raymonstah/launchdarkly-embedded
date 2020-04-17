@@ -26,7 +26,7 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "sdk-key",
-				EnvVars: []string{"SDK_KEY"},
+				EnvVars:     []string{"SDK_KEY"},
 				Destination: &sdkKey,
 			},
 			&cli.StringFlag{
@@ -65,7 +65,7 @@ func useDynamoLocal() ld.FeatureStoreFactory {
 
 func useDynamo() ld.FeatureStoreFactory {
 	s := session.Must(session.NewSession())
-	ddbClient := dynamodb.New(s)
+	ddbClient := dynamodb.New(s, aws.NewConfig().WithMaxRetries(1))
 	dynamoFactory, err := lddynamodb.NewDynamoDBFeatureStoreFactory("ld-table", lddynamodb.CacheTTL(0), lddynamodb.DynamoClient(ddbClient))
 	if err != nil {
 		log.Fatal(err)
@@ -130,13 +130,13 @@ func benchmark(ldClient *ld.LDClient) {
 		select {
 		case <-ticker.C:
 			start := time.Now()
-			_, err := ldClient.StringVariation("string-flag", ld.NewAnonymousUser("blah"), "")
+			str, err := ldClient.StringVariation("string-flag", ld.NewAnonymousUser("blah"), "serving default..")
 			if err != nil {
 				fmt.Println("unable to get string variation", err)
 			}
 			elapsed := time.Now().Sub(start)
-			fmt.Println(elapsed.Microseconds())
-			//fmt.Printf("evaluated variation as %q in %v\n", str, elapsed.String())
+			//fmt.Println(elapsed.Microseconds())
+			fmt.Printf("evaluated variation as %q in %v\n", str, elapsed.String())
 			totalTime += elapsed
 		}
 	}

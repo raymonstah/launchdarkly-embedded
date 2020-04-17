@@ -12,10 +12,10 @@ In this project specifically, I used [BoltDB](https://github.com/boltdb/bolt).
 * Easy to export / move around
 * Single file (typically)
 * Survives LaunchDarkly going down
+* Offline mode
 
 ## Reasons Not to Use an Embedded Database
 * No ad-hoc querying
-* Structure is limited
 * No Security / Replication / Access-control built-in
 * High coupling between database and application (it goes wherever your app goes)
 
@@ -42,16 +42,15 @@ Let's evaluate the same flag 500 times.
 
 * Using DynamoDB (us-west-2 / Oregon): 58 milliseconds
 * Using DynamoDB (local): 3.65 milliseconds
-* Using BoltDB: 35 microseconds
 * Using Redis (local): 1.7 milliseconds
+* Using BoltDB: 35 microseconds
 
 So.. roughly ~1000x faster compared to DynamoDB
 
 ## Things left to do:
 * Write unit tests
 * Documentation
-* Test against reads and writes of different flags
-* Record video
+* Test against many flags for both r/w instead of reading from a single flag
 
 ##Summary
 * Speed! Reads are way faster than the traditional data stores.
