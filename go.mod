@@ -13,6 +13,7 @@ require (
 	github.com/launchdarkly/eventsource v1.4.1 // indirect
 	github.com/launchdarkly/go-test-helpers v1.1.2 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
+	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
 	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
