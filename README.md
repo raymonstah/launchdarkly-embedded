@@ -52,7 +52,7 @@ So.. roughly ~1000x faster compared to DynamoDB
 * Documentation
 * Test against many flags for both r/w instead of reading from a single flag
 
-##Summary
+## Summary
 * Speed! Reads are way faster than the traditional data stores.
 * Embedded databases have a niche use case and poses tradeoffs. All things should be considered if deciding when to use it.
 * Ability to survive restarts / offline mode.
