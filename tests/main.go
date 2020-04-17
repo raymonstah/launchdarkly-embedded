@@ -18,6 +18,7 @@ import (
 )
 
 var sdkKey string
+var store string
 
 func main() {
 	app := &cli.App{
@@ -27,6 +28,12 @@ func main() {
 				Name:        "sdk-key",
 				Required:    true,
 				Destination: &sdkKey,
+			},
+			&cli.StringFlag{
+				Name:        "s, store",
+				Usage:       "one of: dynamodb-local, dynamodb, boltdb, redis",
+				Required:    true,
+				Destination: &store,
 			},
 		},
 	}
@@ -38,7 +45,7 @@ func main() {
 }
 
 func useBolt(db *bolt.DB) ld.FeatureStoreFactory {
-	factory, err :=  ldbolt.NewBoltFeatureStoreFactory(db)
+	factory, err := ldbolt.NewBoltFeatureStoreFactory(db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,6 +55,16 @@ func useBolt(db *bolt.DB) ld.FeatureStoreFactory {
 func useDynamoLocal() ld.FeatureStoreFactory {
 	s := session.Must(session.NewSession(&aws.Config{
 		Endpoint: aws.String("http://localhost:8000")}))
+	ddbClient := dynamodb.New(s)
+	dynamoFactory, err := lddynamodb.NewDynamoDBFeatureStoreFactory("ld-table", lddynamodb.CacheTTL(0), lddynamodb.DynamoClient(ddbClient))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dynamoFactory
+}
+
+func useDynamo() ld.FeatureStoreFactory {
+	s := session.Must(session.NewSession())
 	ddbClient := dynamodb.New(s)
 	dynamoFactory, err := lddynamodb.NewDynamoDBFeatureStoreFactory("ld-table", lddynamodb.CacheTTL(0), lddynamodb.DynamoClient(ddbClient))
 	if err != nil {
@@ -66,6 +83,7 @@ func useRedis() ld.FeatureStoreFactory {
 	}
 	return store
 }
+
 func action(_ *cli.Context) error {
 	db, err := bolt.Open("my.db", 0600, &bolt.Options{Timeout: time.Second})
 	if err != nil {
@@ -74,12 +92,26 @@ func action(_ *cli.Context) error {
 	defer db.Close()
 
 	connected := connectedToLD()
-
 	ldConfig := ld.DefaultConfig
+
 	ldConfig.UseLdd = !connected
-	ldConfig.FeatureStoreFactory = useBolt(db)
-	//ldConfig.FeatureStoreFactory = useRedis()
-	//ldConfig.FeatureStoreFactory = useDynamoLocal()
+
+	switch store {
+	case "dynamodb":
+		ldConfig.FeatureStoreFactory = useDynamo()
+	case "dynamodb-local":
+		ldConfig.FeatureStoreFactory = useDynamoLocal()
+	case "redis":
+		ldConfig.FeatureStoreFactory = useRedis()
+	case "boltdb":
+		ldConfig.FeatureStoreFactory = useBolt(db)
+	}
+	if store != "" {
+		fmt.Printf("Using %v as launchdarkly feature store factory\n", store)
+	} else {
+		fmt.Print("No feature store factory specified\n")
+	}
+
 	ldClient, err := ld.MakeCustomClient(sdkKey, ldConfig, 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("unable to make LaunchDarkly client: %w", err)

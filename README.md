@@ -10,12 +10,14 @@ In this project specifically, I used [BoltDB](https://github.com/boltdb/bolt).
 * Everything is local
 * Simple / Maintenance free
 * Easy to export / move around
-* Single file
+* Single file (typically)
+* Survives LaunchDarkly going down
 
 ## Reasons Not to Use an Embedded Database
 * No ad-hoc querying
 * Structure is limited
 * No Security / Replication / Access-control built-in
+* High coupling between database and application (it goes wherever your app goes)
 
 ## What does this have to with LaunchDarkly?
 LaunchDarkly has a Go SDK. In that SDK, you can define a custom feature store.
@@ -54,3 +56,8 @@ TODO:
 * Record video
 * Test offline (relay mode) <-- show that this works via network disconnect
 * Show code?
+
+##Summary
+* Speed! Reads are way faster than the traditional data stores.
+* Embedded databases have a niche use case and poses tradeoffs. All things should be considered if deciding when to use it.
+* Ability to survive restarts / offline mode.
