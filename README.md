@@ -33,6 +33,24 @@ You can even use Relay mode, which allows you to run your app without connecting
 config.UseLdd = true
 ```
 
+## Benchmarking:
+(Read only)
+Let's evaluate the same flag 1000 times.
+
+* Using DynamoDB: 3.65 milliseconds
+* Using BoltDB: 35 microseconds
+* Using Redis (local): 1.7 milliseconds
+
+So.. roughly ~100x faster compared to DynamoDB
+
 ## Things left to do:
 * Write unit tests
 * Documentation
+
+TODO:
+* Test against "real" instance of Dynamo? (everything else was too difficult so spin up, which goes back to why people might want to use an embedded datastore in the first place)
+* Test against reads and writes of different flags
+* Make graphs (plot against each other?)
+* Record video
+* Test offline (relay mode) <-- show that this works via network disconnect
+* Show code?

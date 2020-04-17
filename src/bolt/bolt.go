@@ -20,7 +20,7 @@ func (b boltFeatureStore) InitInternal(allData map[ld.VersionedDataKind]map[stri
 	err := b.boltDB.Update(func(tx *bolt.Tx) error {
 		for versionedData, data := range allData {
 			if err := tx.DeleteBucket([]byte(versionedData.GetNamespace())); err != nil {
-				return fmt.Errorf("unable to delete bucket: %w", err)
+				// idempotent
 			}
 
 			bucket, err := tx.CreateBucketIfNotExists([]byte(versionedData.GetNamespace()))
@@ -53,13 +53,17 @@ func (b boltFeatureStore) InitInternal(allData map[ld.VersionedDataKind]map[stri
 // GetInternal assumes that the inner bucket exists
 func (b boltFeatureStore) GetInternal(kind ld.VersionedDataKind, key string) (ld.VersionedData, error) {
 	defer func(t time.Time) {
-		fmt.Printf("took %v microseconds to get item\n", time.Now().Sub(t).Microseconds())
+		fmt.Printf("took %v microseconds to get item %v\n", time.Now().Sub(t).Microseconds(), key)
 	}(time.Now())
 
 	var result ld.VersionedData
 	err := b.boltDB.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(kind.GetNamespace()))
 		rawData := bucket.Get([]byte(key))
+		if rawData == nil {
+			result = nil
+			return nil
+		}
 		versionedData, err := utils.UnmarshalItem(kind, rawData)
 		if err != nil {
 			return fmt.Errorf("unable to unmarshal item from Bolt: %w", err)
@@ -141,7 +145,29 @@ func (b boltFeatureStore) UpsertInternal(kind ld.VersionedDataKind, item ld.Vers
 // does not need to worry about caching this value; FeatureStoreWrapper will only call
 // it when necessary.
 func (b boltFeatureStore) InitializedInternal() bool {
-	return true
+	bucketName := []byte("init-ld")
+	var got []byte
+	err := b.boltDB.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists(bucketName)
+		if err != nil {
+			return fmt.Errorf("unable to create bucket `init-ld`: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+
+	err = b.boltDB.View(func(tx *bolt.Tx) error {
+
+		got = tx.Bucket(bucketName).Get([]byte("init-key"))
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+
+	return got != nil
 }
 
 // GetCacheTTL returns the length of time that data should be retained in an in-memory
@@ -151,9 +177,22 @@ func (b boltFeatureStore) GetCacheTTL() time.Duration {
 	return 0
 }
 
-func NewBoltFeatureStoreFactory(db *bolt.DB) ld.FeatureStoreFactory {
+func NewBoltFeatureStoreFactory(db *bolt.DB) (ld.FeatureStoreFactory, error) {
+	err := db.Update(func(tx *bolt.Tx) error {
+		for _, kind := range ld.VersionedDataKinds {
+			_, err := tx.CreateBucketIfNotExists([]byte(kind.GetNamespace()))
+			if err != nil {
+				return fmt.Errorf("unable to create bucket %q: %w", kind.GetNamespace(), err)
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating buckets: %w", err)
+	}
 	return func(config ld.Config) (ld.FeatureStore, error) {
 		boltFeatureStore := boltFeatureStore{boltDB: db}
 		return utils.NewFeatureStoreWrapperWithConfig(boltFeatureStore, config), nil
-	}
+	}, nil
 }

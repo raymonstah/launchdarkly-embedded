@@ -9,3 +9,6 @@ aws dynamodb create-table \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5 \
     --endpoint-url http://localhost:8000
+
+
+aws dynamodb delete-table --table-name ld-table --endpoint-url http://localhost:8000

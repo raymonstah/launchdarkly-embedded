@@ -7,6 +7,7 @@ require (
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/boltdb/bolt v1.3.1
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
